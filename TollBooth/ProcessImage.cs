@@ -15,7 +15,7 @@ namespace TollBooth
         public static HttpClient _client;
 
         [FunctionName("ProcessImage")]
-        public static async Task Run([BlobTrigger("images/{name}", Connection = "blobStorageConnection")]Stream incomingPlate, string name, TraceWriter log)
+        public static async Task Run([BlobTrigger("images/{name}", Connection = "blobStorageConnection")] Stream incomingPlate, string name, TraceWriter log)
         {
             string licensePlateText = string.Empty;
             // Reuse the HttpClient across calls as much as possible so as not to exhaust all available sockets on the server on which it runs.
@@ -25,14 +25,17 @@ namespace TollBooth
 
             try
             {
-                byte[] licensePlateImage;
+
                 // Convert the incoming image stream to a byte array.
+                byte[] licensePlateImage;
                 using (var br = new BinaryReader(incomingPlate))
                 {
                     licensePlateImage = br.ReadBytes((int)incomingPlate.Length);
                 }
-                // TODO 1: Set the licensePlateText value by awaiting a new FindLicensePlateText.GetLicensePlate method.
-                // COMPLETE: licensePlateText = await new.....
+
+                //TODO 1
+                //Call OCR to get the text from the image
+                licensePlateText = await new FindLicensePlateText(log, _client).GetLicensePlate(licensePlateImage);
 
                 // Send the details to Event Grid.
                 await new SendToEventGrid(log, _client).SendLicensePlateData(new LicensePlateData()
